@@ -10,8 +10,9 @@ def get_voice_name(file_path):
         if match:
             voice_name = match.group(1)
             voice_name = voice_name.split("-")[-1]
-            voice_name = re.sub(r'([a-z])([A-Z])', r'\1 \2', voice_name)
-            return voice_name.replace("Neural", "").strip()
+            # voice_name = re.sub(r'([a-z])([A-Z])', r'\1 \2', voice_name)
+            # return voice_name.replace("Neural", "").strip()
+            return voice_name
         else:
             raise Exception
         
