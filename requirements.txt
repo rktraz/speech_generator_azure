@@ -1,0 +1,7 @@
+Flask
+python-dotenv
+python_docx
+azure-cognitiveservices-speech
+azure-ai-textanalytics
+azure-core
+gunicorn

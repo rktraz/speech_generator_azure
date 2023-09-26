@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Speech Generation</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ url_for('static', filename='css/styles.css') }}"
+    />
+  </head>
+  <body>
+    <div class="body-container">
+      <div class="container">
+        <form
+          method="POST"
+          enctype="multipart/form-data"
+          id="form"
+          action=""
+        >
+          <div class="input-container">
+            <div class="inputText" style="width: 33%">
+              <div class="chooseLang">
+                <label for="original-lang-select" class="input-language-label"
+                  >Paste here text to translate</label
+                >
+              </div>
+              <textarea
+                name="original_text"
+                class="input-field"
+                id="text-input"
+                placeholder="Enter text"
+              >{{ original_text }}</textarea>
+            </div>
+
+            <button type="button" id="translate-button">Translate</button>
+
+            <div class="outputText" style="width: 33%">
+              <div class="chooseLang">
+                <label for="target-lang-select" class="select-language-label">Select target language:</label>
+                <select name="target-lang-select" id="target-lang-select" class="select-language">
+                    {% for language in languages_list %}
+                    <option lang="{{ language.code }}" value="{{ language.value }}"
+                        {% if target_lang == language.value %}selected{% endif %}>
+                        {{ language.label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+              <textarea
+                name="translated_text"
+                class="translated-field"
+                id="translated-text"
+                placeholder="Translated text"
+                readonly
+              >{{ translated_text }}</textarea>
+            </div>
+
+            <div class="controlBtn">
+              <div class="uploadFile">
+                <button
+                  type="button"
+                  class="copyTextBtn"
+                  onclick="copyText('text-input')"
+                >
+                  Copy Text
+                </button>
+                <label for="file-input" class="choose-file-button"
+                  >⬆️ Upload file from computer (.txt or .doc)</label
+                >
+                <input
+                  type="file"
+                  name="file"
+                  id="file-input"
+                  style="display: none"
+                  onchange="handleFileSelect(event)"
+                />
+              </div>
+              <div class="downloadFile">
+                <button
+                  type="button"
+                  class="copyTextBtn"
+                  onclick="copyText('translated-text')"
+                >
+                  Copy Text
+                </button>
+                <button class="choose-file-button" onclick="downloadText(event)">
+                  ⬇️ Download translated text as a .txt file
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="voice">
+            <div class="voice-container">
+              <label for="voice-select" class="select-voice-label"
+                >Select Voice:</label
+              >
+              <select name="selected_voice" id="voice-actor-input" class="select-voice">
+                {% if selected_voice %}
+                <option selected>{{ selected_voice }}</option>
+                {% else %}
+                <option disabled selected>Choose the voice</option>
+                {% endif %}
+                {% for voice in voices_list %}
+                <option>{{ voice }}</option>
+                {% endfor %}
+            </select>
+            </div>
+
+            <input
+              type="submit"
+              value="✨ Generate Speech ✨"
+              class="generateSpeechBtn"
+            />
+            <p class="loading-message">⏳ Please wait...</p>
+            {% if audio_data %}
+            <audio controls class="audio-player">
+              <source
+                src="data:audio/mpeg;base64,{{ audio_data }}"
+                type="audio/mpeg"
+              />
+              Your browser does not support the audio element.
+            </audio>
+            {% endif %}
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+  </body>
+</html>
