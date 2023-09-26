@@ -39,15 +39,15 @@ text_analytics_client = TextAnalyticsClient(
 languages_list = [
     {"code": "en", "value": "English", "default": True, "label": "English"},
     {"code": "fr", "value": "French", "default": False, "label": "French"},
-    {"code": "es", "value": "Spanish", "default": False, "label": "Spanish"},
-    {"code": "hi", "value": "Hindi", "default": False, "label": "Hindi"}
+    # {"code": "es", "value": "Spanish", "default": False, "label": "Spanish"},
+    # {"code": "hi", "value": "Hindi", "default": False, "label": "Hindi"}
 ]
 
 languages_to_code = {
     "English": "en",
-    "Spanish": "es",
+    # "Spanish": "es",
     "French": "fr",
-    "Hindi": "hi"
+    # "Hindi": "hi"
 }
 
 @app.route('/', methods=['GET', 'POST'])
