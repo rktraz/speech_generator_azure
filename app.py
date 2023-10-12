@@ -65,11 +65,13 @@ def home():
         if 'selected_voice' in session:
             selected_voice = session['selected_voice']
 
+            enhanced_text = enhance_with_punctuation_characters(session['translated_text'])
+            print(enhanced_text)
             target_lang_code = languages_to_code[session['target_lang']]
             session['voices_list'] = list(voice_configurations[target_lang_code].keys())
 
             ssml_string = voice_configurations[target_lang_code][selected_voice].read_text()
-            ssml_string_modified = modify_ssml(ssml_string, session['translated_text'])
+            ssml_string_modified = modify_ssml(ssml_string, enhanced_text)
             result = speech_synthesizer.speak_ssml_async(ssml_string_modified).get()
             audio_data = base64.b64encode(result.audio_data).decode('utf-8')
 

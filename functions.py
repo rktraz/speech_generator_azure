@@ -53,3 +53,27 @@ def modify_ssml(ssml_string, new_text):
         return re.sub(pattern3, f"<s />{new_text}<s />", ssml_string)
     elif match4:
         return re.sub(pattern4, f"<voice\\1>{new_text}</voice>", ssml_string)
+
+
+def enhance_with_punctuation_characters(text):
+    # Replace mobile numbers with spaces between them with dashes
+    text = re.sub(r'\b1\s\d{3}\s\d{3}\s\d{4}\b', lambda match: match.group().replace(" ", "-"), text)
+    
+    # Replace Canadian governmental short numbers like "911" to "9-1-1"
+    text = re.sub(r'\b911\b', '9-1-1', text)
+
+    # Regular expression to match URLs
+    url_pattern = r'((?:http://|https://|www\.)\S+|(?:\w+\.\w+/\S+))'
+    
+    # Find all URL matches in the text
+    urls = re.findall(url_pattern, text)
+    
+    # Replace each URL with the enhanced format and add a comma after the URL
+    for url in urls:
+        enhanced_url = re.sub(r'/', ',/', url)
+        text = text.replace(url, enhanced_url + ",")
+    
+    # Replace "WSIB" with "W S IB"
+    text = text.replace("WSIB", "W S IB")
+    
+    return text
