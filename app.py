@@ -33,7 +33,7 @@ speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, au
 ta_credential = AzureKeyCredential(subscription_key)
 
 text_analytics_client = TextAnalyticsClient(
-            endpoint=text_analytics_endpoint, 
+            endpoint=text_analytics_endpoint,
             credential=ta_credential)
 
 languages_list = [
@@ -58,16 +58,18 @@ def home():
         session['translated_text'] = request.form.get('translated_text')
         session['target_lang'] = request.form.get('target-lang-select')
         session['selected_voice'] = request.form.get('selected_voice')
-        
+
         # print(session)
 
         # Generate the speech
         if 'selected_voice' in session:
             selected_voice = session['selected_voice']
-
-            enhanced_text = enhance_with_punctuation_characters(session['translated_text'])
-            print(enhanced_text)
             target_lang_code = languages_to_code[session['target_lang']]
+
+            enhanced_text = improve_pronunciation(session['translated_text'],
+                                                  target_lang_code)
+
+            print(enhanced_text)
             session['voices_list'] = list(voice_configurations[target_lang_code].keys())
 
             ssml_string = voice_configurations[target_lang_code][selected_voice].read_text()
@@ -79,7 +81,7 @@ def home():
         return render_template('index.html', original_text=session['original_text'], translated_text=session['translated_text'],
                                languages_list=languages_list, voices_list=session['voices_list'],
                                target_lang=session['target_lang'], audio_data=audio_data)
-        
+
     else:
         # Retrieve the form values from the session
         original_text = session.get('original_text', "")
@@ -134,4 +136,4 @@ def translate_text():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
