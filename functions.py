@@ -62,12 +62,14 @@ def improve_pronunciation(text, target_lang_code):
                   lambda match: match.group().replace(" ", '-'),
                   text)
     if target_lang_code == "fr":
-        text = re.sub(r'\b1-\d{3}-\d{3}-\d{4}\b',
-                      lambda match: match.group().replace("-", f'-{x_weak_break}'),
-                      text)
+        text = re.sub(r'\bTélésanté\b', 'Téléssanté ', text)
 
-    # Replace Canadian governmental short numbers like "911" to "9-1-1"
-    text = re.sub(r'\b911\b', '9-1-1', text)
+        text = re.sub(r'\b1-\d{3}-\d{3}-\d{4}\b',
+                      lambda match: match.group().replace("-", f',{x_weak_break}'),
+                      text)
+        text = re.sub(r'\b911\b', f'{x_weak_break} 9,{x_weak_break}1, {x_weak_break}1', text)
+    else:
+        text = re.sub(r'\b911\b', '9-1-1', text)
 
     # Regular expression to match URLs
     url_pattern = r'((?:http://|https://|www\.)\S+|(?:\w+\.\w+/\S+))'

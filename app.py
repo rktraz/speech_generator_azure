@@ -74,6 +74,9 @@ def home():
 
             ssml_string = voice_configurations[target_lang_code][selected_voice].read_text()
             ssml_string_modified = modify_ssml(ssml_string, enhanced_text)
+            print()
+            print(ssml_string_modified)
+            print()
             result = speech_synthesizer.speak_ssml_async(ssml_string_modified).get()
             audio_data = base64.b64encode(result.audio_data).decode('utf-8')
 
