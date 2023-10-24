@@ -64,9 +64,25 @@ def improve_pronunciation(text, target_lang_code):
     if target_lang_code == "fr":
         text = re.sub(r'\bTélésanté\b', 'Téléssanté ', text)
 
-        text = re.sub(r'\b1-\d{3}-\d{3}-\d{4}\b',
-                      lambda match: match.group().replace("-", f',{x_weak_break}'),
-                      text)
+        # text = re.sub(r'\b1-\d{3}-\d{3}-\d{4}\b',
+        #               lambda match: match.group().replace("-", f',{x_weak_break}'),
+        #               text)
+        # Input text
+        #########
+
+        # Step 1: Find and extract phone number patterns
+        matches = re.findall(r'\b(\d)-?(\d{3})-?(\d{3})-?(\d{4})\b|\b(\d) (\d{3}) (\d{3}) (\d{4})\b', text)
+
+        # Step 2: Combine the digits to form a single number without spaces or dashes
+        numbers = [''.join(match[:4]) if match[0] else ''.join(match[4:]) for match in matches]
+
+        # Step 3: Format the resulting numbers with breaks
+        formatted_numbers = ', '.join([f'<break strength="x-weak"/> {digit}' for number in numbers for digit in number])
+
+        # Replace the phone numbers in the original text with the formatted version
+        text = re.sub(r'\b(\d)-?(\d{3})-?(\d{3})-?(\d{4})\b|\b(\d) (\d{3}) (\d{3}) (\d{4})\b', formatted_numbers, text)
+
+###################
         text = re.sub(r'\b911\b', f'{x_weak_break} 9,{x_weak_break}1, {x_weak_break}1', text)
     else:
         text = re.sub(r'\b911\b', '9-1-1', text)
