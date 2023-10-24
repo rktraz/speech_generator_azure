@@ -77,7 +77,8 @@ def improve_pronunciation(text, target_lang_code):
         numbers = [''.join(match[:4]) if match[0] else ''.join(match[4:]) for match in matches]
 
         # Step 3: Format the resulting numbers with breaks
-        formatted_numbers = ', '.join([f'<break strength="x-weak"/> {digit}' for number in numbers for digit in number])
+        formatted_numbers = '<break strength="x-weak"/> ,'.join(list(' '.join(numbers)))
+
 
         # Replace the phone numbers in the original text with the formatted version
         text = re.sub(r'\b(\d)-?(\d{3})-?(\d{3})-?(\d{4})\b|\b(\d) (\d{3}) (\d{3}) (\d{4})\b', formatted_numbers, text)
