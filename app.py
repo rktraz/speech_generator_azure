@@ -14,16 +14,17 @@ from functions import *
 
 app = Flask(__name__)
 app.secret_key = "secret"
-# Define a simple password (use a more secure method in production)
-PASSWORD = "azov_3"
+
+base_folder = "ssml_files"
+voice_configurations = generate_voice_configurations(base_folder)
+# print(voice_configurations)
 
 
 # Load environment variables from .env file
 load_dotenv()
 
-base_folder = "ssml_files"
-voice_configurations = generate_voice_configurations(base_folder)
-# print(voice_configurations)
+# Define a simple password (use a more secure method in production)
+PASSWORD = os.getenv("PASSWORD")
 
 # Configure Azure Speech Service
 subscription_key = os.getenv("SUBSCRIPTION_KEY")
