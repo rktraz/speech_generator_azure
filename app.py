@@ -13,7 +13,10 @@ from functions import *
 
 
 app = Flask(__name__)
-app.secret_key = 'secret'
+app.secret_key = "secret"
+# Define a simple password (use a more secure method in production)
+PASSWORD = "azov_3"
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -23,18 +26,22 @@ voice_configurations = generate_voice_configurations(base_folder)
 # print(voice_configurations)
 
 # Configure Azure Speech Service
-subscription_key = os.getenv('SUBSCRIPTION_KEY')
-service_region = os.getenv('SERVICE_REGION')
-translator_endpoint = os.getenv('TRANSLATOR_ENDPOINT')
-text_analytics_endpoint = os.getenv('TEXT_ANALYTICS_ENDPOINT')
+subscription_key = os.getenv("SUBSCRIPTION_KEY")
+service_region = os.getenv("SERVICE_REGION")
+translator_endpoint = os.getenv("TRANSLATOR_ENDPOINT")
+text_analytics_endpoint = os.getenv("TEXT_ANALYTICS_ENDPOINT")
 
-speech_config = speechsdk.SpeechConfig(subscription=subscription_key, region=service_region)
-speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=None)
+speech_config = speechsdk.SpeechConfig(
+    subscription=subscription_key, region=service_region
+)
+speech_synthesizer = speechsdk.SpeechSynthesizer(
+    speech_config=speech_config, audio_config=None
+)
 ta_credential = AzureKeyCredential(subscription_key)
 
 text_analytics_client = TextAnalyticsClient(
-            endpoint=text_analytics_endpoint,
-            credential=ta_credential)
+    endpoint=text_analytics_endpoint, credential=ta_credential
+)
 
 languages_list = [
     {"code": "en", "value": "English", "default": True, "label": "English"},
@@ -50,93 +57,136 @@ languages_to_code = {
     # "Hindi": "hi"
 }
 
-@app.route('/', methods=['GET', 'POST'])
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        if request.form.get("password") == PASSWORD:
+            session["authenticated"] = True
+            return redirect(url_for("home"))
+        else:
+            return "Incorrect password", 401
+    return render_template("login.html")
+
+
+#     return """
+# <form method="post">
+#            Password: <input type="password" name="password">
+# <input type="submit" value="Login">
+# </form>
+#    """
+
+
+@app.route("/", methods=["GET", "POST"])
 def home():
-    if request.method == 'POST':
+    if "authenticated" not in session:
+        return redirect(url_for("login"))
+    if request.method == "POST":
         # Save the form values in the session
-        session['original_text'] = request.form.get('original_text')
-        session['translated_text'] = request.form.get('translated_text')
-        session['target_lang'] = request.form.get('target-lang-select')
-        session['selected_voice'] = request.form.get('selected_voice')
+        session["original_text"] = request.form.get("original_text")
+        session["translated_text"] = request.form.get("translated_text")
+        session["target_lang"] = request.form.get("target-lang-select")
+        session["selected_voice"] = request.form.get("selected_voice")
 
         # print(session)
 
         # Generate the speech
-        if 'selected_voice' in session:
-            selected_voice = session['selected_voice']
-            target_lang_code = languages_to_code[session['target_lang']]
+        if "selected_voice" in session:
+            selected_voice = session["selected_voice"]
+            target_lang_code = languages_to_code[session["target_lang"]]
 
-            enhanced_text = improve_pronunciation(session['translated_text'],
-                                                  target_lang_code)
+            enhanced_text = improve_pronunciation(
+                session["translated_text"], target_lang_code
+            )
 
             print(enhanced_text)
-            session['voices_list'] = list(voice_configurations[target_lang_code].keys())
+            session["voices_list"] = list(voice_configurations[target_lang_code].keys())
 
-            ssml_string = voice_configurations[target_lang_code][selected_voice].read_text()
+            ssml_string = voice_configurations[target_lang_code][
+                selected_voice
+            ].read_text()
             ssml_string_modified = modify_ssml(ssml_string, enhanced_text)
             print()
             print(ssml_string_modified)
             print()
             result = speech_synthesizer.speak_ssml_async(ssml_string_modified).get()
-            audio_data = base64.b64encode(result.audio_data).decode('utf-8')
+            audio_data = base64.b64encode(result.audio_data).decode("utf-8")
 
-
-        return render_template('index.html', original_text=session['original_text'], translated_text=session['translated_text'],
-                               languages_list=languages_list, voices_list=session['voices_list'],
-                               target_lang=session['target_lang'], audio_data=audio_data)
+        return render_template(
+            "index.html",
+            original_text=session["original_text"],
+            translated_text=session["translated_text"],
+            languages_list=languages_list,
+            voices_list=session["voices_list"],
+            target_lang=session["target_lang"],
+            audio_data=audio_data,
+        )
 
     else:
         # Retrieve the form values from the session
-        original_text = session.get('original_text', "")
-        translated_text = session.get('translated_text', "")
-        selected_voice = session.get('selected_voice', "")
-        target_lang = session.get('target_lang', "")
+        original_text = session.get("original_text", "")
+        translated_text = session.get("translated_text", "")
+        selected_voice = session.get("selected_voice", "")
+        target_lang = session.get("target_lang", "")
 
-        return render_template('index.html', languages_list=languages_list, original_text=original_text,
-                               translated_text=translated_text, selected_voice=selected_voice,
-                               target_lang=target_lang)
+        return render_template(
+            "index.html",
+            languages_list=languages_list,
+            original_text=original_text,
+            translated_text=translated_text,
+            selected_voice=selected_voice,
+            target_lang=target_lang,
+        )
 
 
-@app.route('/extract_text', methods=['POST'])
+@app.route("/extract_text", methods=["POST"])
 def extract_text():
-    file = request.files['file']
+    if "authenticated" not in session:
+        return redirect(url_for("login"))
+    file = request.files["file"]
     doc = docx.Document(file)
     text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
     return text
 
-@app.route('/translate', methods=['POST'])
+
+@app.route("/translate", methods=["POST"])
 def translate_text():
-    text_to_translate = request.json['original_text']
-    target_lang = request.json['target_lang']
+    if "authenticated" not in session:
+        return redirect(url_for("login"))
+    text_to_translate = request.json["original_text"]
+    target_lang = request.json["target_lang"]
     target_lang_code = languages_to_code[target_lang]
 
-    original_lang_response = text_analytics_client.detect_language(documents=[text_to_translate])[0]
+    original_lang_response = text_analytics_client.detect_language(
+        documents=[text_to_translate]
+    )[0]
     original_lang_code = original_lang_response.primary_language.iso6391_name
 
     headers = {
-        'Ocp-Apim-Subscription-Key': subscription_key,
-        'Content-type': 'application/json',
-        'Ocp-Apim-Subscription-Region': service_region
+        "Ocp-Apim-Subscription-Key": subscription_key,
+        "Content-type": "application/json",
+        "Ocp-Apim-Subscription-Region": service_region,
     }
 
-    params = {
-        'api-version': '3.0',
-        'from': original_lang_code,
-        'to': target_lang_code
-    }
+    params = {"api-version": "3.0", "from": original_lang_code, "to": target_lang_code}
 
-    body = [{
-        'text': text_to_translate
-    }]
+    body = [{"text": text_to_translate}]
 
-    response = requests.post(f'{translator_endpoint}/translate', headers=headers, params=params, json=body)
-    translated_text = response.json()[0]['translations'][0]['text']
+    response = requests.post(
+        f"{translator_endpoint}/translate", headers=headers, params=params, json=body
+    )
+    translated_text = response.json()[0]["translations"][0]["text"]
 
     voices_list = list(voice_configurations[target_lang_code].keys())
 
-    return json.dumps({'translated_text': translated_text, 'voices_list': voices_list})
+    return json.dumps({"translated_text": translated_text, "voices_list": voices_list})
 
 
+@app.route("/logout")
+def logout():
+    session.pop("authenticated", None)
+    return redirect(url_for("login"))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app.run(debug=True)
